@@ -1,8 +1,8 @@
-# Full Stack Coffe Shop API
+# Full Stack Coffee Shop API
 
 ## Introduction
 
-This project is a coffee shop app that allows users visitors to view drinks, baristas can view drinks and see ingredients and managers can create, edit, and update drinks.
+This project is a coffee shop app that allows users to view drinks, baristas can view drinks and see ingredients and managers can create, edit, and update drinks. The objective is to demonstrate API Authentication and Authorization. Specifically, this API requires JWT tokens from Auth0.
 
 Backend code follows [PEP8 style guidelines](https://www.python.org/dev/peps/pep-0008/).
 
@@ -50,7 +50,7 @@ flask run
 
 ### Testing
 
-To run the tests, create a sqlite database called `test_drinks.py` and add a single drink. Change `self.manager_token` and `self.barista_token` in test_drinks.py to valid tokens. Then, from the /src directory run
+To run the tests, create a sqlite database called `test_drinks.py` in the /src directory and add a single drink. Change `self.manager_token` and `self.barista_token` in test_drinks.py to valid tokens. Then, from the /src directory run
 
 ```
 python test_drinks.py
@@ -74,8 +74,6 @@ This project uses NPM to manage software dependencies. NPM Relies on the package
 npm install
 ```
 
-> _tip_: **npm i** is shorthand for **npm install**
-
 ## Required Tasks
 
 ### Configure Enviornment Variables
@@ -98,7 +96,8 @@ ionic serve
 ### Getting Started
 
 - Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default, `http://127.0.0.1:5000/`, which is set as a proxy in the frontend configuration.
-- Authentication: This version of the application does not require authentication or API keys.
+
+- Authentication: This version of the application does not require API keys but does require an Auth0 JWT token for all create, update, and delete requests. A token is also required for drink details.
 
 ### Error Handling
 
@@ -114,422 +113,135 @@ Error are returned as JSON objects in the following format
 
 The API will return four error types when requests fail:
 
+- 400
+- 401
+- 403
 - 404
-- 409
 - 422
 - 500
 
 ### Endpoint Library
 
-#### Get /questions
+#### Get /drinks
 
 - General:
 
-  - Returns a list of question objects, success value, list of categories, total number of questions,
-    and current catefory.
-  - Results are paginated in groups of 10. Include a request argument to choose page number, starting from 1.
+  - Returns a list of drink objects and success value.
 
-- Sample: `curl http://127.0.0.1:5000/questions`
+- Sample: `curl http://127.0.0.1:5000/drinks`
 
-```{
-  "categories": [
+```
+{
+  "drinks": [
     {
       "id": 1,
-      "type": "Science"
-    },
-    {
-      "id": 2,
-      "type": "Art"
-    },
-    {
-      "id": 3,
-      "type": "Geography"
-    },
-    {
-      "id": 4,
-      "type": "History"
-    },
-    {
-      "id": 5,
-      "type": "Entertainment"
-    },
-    {
-      "id": 6,
-      "type": "Sports"
-    }
-  ],
-  "count": 20,
-  "current_category": null,
-  "questions": [
-    {
-      "answer": "Maya Angelou",
-      "category": 4,
-      "difficulty": 2,
-      "id": 5,
-      "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
-    },
-    {
-      "answer": "Muhammad Ali",
-      "category": 4,
-      "difficulty": 1,
-      "id": 9,
-      "question": "What boxer's original name is Cassius Clay?"
-    },
-    {
-      "answer": "Apollo 13",
-      "category": 5,
-      "difficulty": 4,
-      "id": 2,
-      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
-    },
-    {
-      "answer": "Tom Cruise",
-      "category": 5,
-      "difficulty": 4,
-      "id": 4,
-      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
-    },
-    {
-      "answer": "Edward Scissorhands",
-      "category": 5,
-      "difficulty": 3,
-      "id": 6,
-      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-    },
-    {
-      "answer": "Brazil",
-      "category": 6,
-      "difficulty": 3,
-      "id": 10,
-      "question": "Which is the only team to play in every soccer World Cup tournament?"
-    },
-    {
-      "answer": "Uruguay",
-      "category": 6,
-      "difficulty": 4,
-      "id": 11,
-      "question": "Which country won the first ever soccer World Cup in 1930?"
-    },
-    {
-      "answer": "George Washington Carver",
-      "category": 4,
-      "difficulty": 2,
-      "id": 12,
-      "question": "Who invented Peanut Butter?"
-    },
-    {
-      "answer": "Lake Victoria",
-      "category": 3,
-      "difficulty": 2,
-      "id": 13,
-      "question": "What is the largest lake in Africa?"
-    },
-    {
-      "answer": "The Palace of Versailles",
-      "category": 3,
-      "difficulty": 3,
-      "id": 14,
-      "question": "In which royal palace would you find the Hall of Mirrors?"
+      "recipe": [
+        {
+          "color": "green",
+          "parts": 1
+        }
+      ],
+      "title": "Super Green"
     }
   ],
   "success": true
 }
 ```
 
-#### GET /categories
+#### GET /drinks-detail
 
 - General:
 
-  - Returns a list of categories, the count of categories, and a success value.
+  - Returns a list of drinks and success value. The drinks contain recipe information.
+  - Requires barista or manager permissions role.
 
-- Sample: `curl http://127.0.0.1:5000/categories`
+- Sample: `curl http://127.0.0.1:5000/drinks-detail`
 
 ```
 {
-  "categories": [
+  "drinks": [
     {
       "id": 1,
-      "type": "Science"
-    },
+      "recipe": [
+        {
+          "color": "green",
+          "name": "Green Beast",
+          "parts": 1
+        }
+      ],
+      "title": "Super Green"
+    }
+  ],
+  "success": true
+}
+```
+
+#### DELETE /drinks/{drink_id}
+
+- General:
+  - Deletes a drink with the provided ID. Returns the success value and the deleted drink's ID.
+  - Requires manager permissions role.
+- Sample: `curl -X DELETE \ http://localhost:5000/drinks/2 \ -H 'Accept: */*' \ -H 'Accept-Encoding: gzip, deflate' \ -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IlJFSTJNVFF3UXpoR1JEQTRRMFJETVVGRE5VTkJRVVUwUmtVNU9FUXhNMEUzTmtOQ016RkRSQSJ9.eyJpc3MiOiJodHRwczovL2ZzbmQtYmlsbHkuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVkODYyYzMwNGVmMDMyMGRmNGU0YWU5NiIsImF1ZCI6ImRyaW5rcyIsImlhdCI6MTU2OTI3NjY2OSwiZXhwIjoxNTY5MzYzMDY5LCJhenAiOiJybFVOaURqalMwQlA2bzBYSHJiNGYyU0ZobEUwRnJEMCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MtZGV0YWlsIiwicGF0Y2g6ZHJpbmtzIiwicG9zdDpkcmlua3MiXX0.cqm-TZaSALiLlm9zeSOHCiasJltDet4-76yDUOIrkM4bH0VZG2-whg5b0fxV-dxyOjKwHtd2fBt-V-hFgzonO6CfpL2G0CsWmfrSTmex5sMJL24YA5ZotX1HsLENntsjza2OCMvBxMiE0HFD8qdekMndweWYxeE5YON-L_0SIYg0RVpZ1WInaEuArh40n-bD84E3fDleczuxslGUSc873rQ6k_2kfI-IxUj-57iezSDmoGEXgUdexi_1sO2eyZ6F3En4Jj0Aka5p5rfps09Bro9uGYIitCFsTh_k7nuHi-KQE80ReZjIONtUNT-G-68tQ2yMyNqtM5Dmorvtb1f5Yw' \ -H 'Cache-Control: no-cache' \ -H 'Connection: keep-alive' \ -H 'Content-Length: 0' \ -H 'Host: localhost:5000' \ -H 'Postman-Token: 672de643-2ebe-410a-9777-4b84ee0bdd4d,3ec05d51-16f6-4f5a-8cfa-0c767c9da4b3' \ -H 'User-Agent: PostmanRuntime/7.17.1' \ -H 'cache-control: no-cache'`
+
+```
+{
+  "delete": 2,
+  "success": true
+}
+```
+
+#### POST /drinks
+
+- General:
+
+  - Creates a new drink using the title and recipe. Returns the success value and the created drink JSON.
+  - Requires manager permissions role
+
+- Sample: `curl -X POST \ http://localhost:5000/drinks \ -H 'Accept: */*' \ -H 'Accept-Encoding: gzip, deflate' \ -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IlJFSTJNVFF3UXpoR1JEQTRRMFJETVVGRE5VTkJRVVUwUmtVNU9FUXhNMEUzTmtOQ016RkRSQSJ9.eyJpc3MiOiJodHRwczovL2ZzbmQtYmlsbHkuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVkODYyYzMwNGVmMDMyMGRmNGU0YWU5NiIsImF1ZCI6ImRyaW5rcyIsImlhdCI6MTU2OTI3NjY2OSwiZXhwIjoxNTY5MzYzMDY5LCJhenAiOiJybFVOaURqalMwQlA2bzBYSHJiNGYyU0ZobEUwRnJEMCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MtZGV0YWlsIiwicGF0Y2g6ZHJpbmtzIiwicG9zdDpkcmlua3MiXX0.cqm-TZaSALiLlm9zeSOHCiasJltDet4-76yDUOIrkM4bH0VZG2-whg5b0fxV-dxyOjKwHtd2fBt-V-hFgzonO6CfpL2G0CsWmfrSTmex5sMJL24YA5ZotX1HsLENntsjza2OCMvBxMiE0HFD8qdekMndweWYxeE5YON-L_0SIYg0RVpZ1WInaEuArh40n-bD84E3fDleczuxslGUSc873rQ6k_2kfI-IxUj-57iezSDmoGEXgUdexi_1sO2eyZ6F3En4Jj0Aka5p5rfps09Bro9uGYIitCFsTh_k7nuHi-KQE80ReZjIONtUNT-G-68tQ2yMyNqtM5Dmorvtb1f5Yw' \ -H 'Cache-Control: no-cache' \ -H 'Connection: keep-alive' \ -H 'Content-Length: 101' \ -H 'Content-Type: application/json' \ -H 'Host: localhost:5000' \ -H 'Postman-Token: 883faf85-ac59-47cb-905d-f87711a3845e,c2effc73-bfa7-45ba-aa38-3e8ff7d06eb6' \ -H 'User-Agent: PostmanRuntime/7.17.1' \ -H 'cache-control: no-cache' \ -d '{ "title": "Watera2", "recipe": [{ "color":"green", "name":"Green Beast", "parts": 1 }] }'`
+
+```
+{
+  "drinks": [
     {
       "id": 2,
-      "type": "Art"
-    },
-    {
-      "id": 3,
-      "type": "Geography"
-    },
-    {
-      "id": 4,
-      "type": "History"
-    },
-    {
-      "id": 5,
-      "type": "Entertainment"
-    },
-    {
-      "id": 6,
-      "type": "Sports"
-    }
-  ],
-  "count": 6,
-  "success": true
-}
-```
-
-#### GET /categories/{category_id}/questions
-
-- General:
-
-  - Returns a list of questions of a given category type with the given category ID,
-    the count of questions of the category, the current category requested, and the success value.
-
-- Sample: `curl http://127.0.0.1:5000/categories/2/questions`
-
-```
-{
-  "count": 4,
-  "current_category": "Art",
-  "questions": [
-    {
-      "answer": "Escher",
-      "category": 2,
-      "difficulty": 1,
-      "id": 16,
-      "question": "Which Dutch graphic artist–initials M C was a creator of optical illusions?"
-    },
-    {
-      "answer": "Mona Lisa",
-      "category": 2,
-      "difficulty": 3,
-      "id": 17,
-      "question": "La Giaconda is better known as what?"
-    },
-    {
-      "answer": "One",
-      "category": 2,
-      "difficulty": 4,
-      "id": 18,
-      "question": "How many paintings did Van Gogh sell in his lifetime?"
-    },
-    {
-      "answer": "Jackson Pollock",
-      "category": 2,
-      "difficulty": 2,
-      "id": 19,
-      "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+      "recipe": [
+        {
+          "color": "green",
+          "name": "Green Beast",
+          "parts": 1
+        }
+      ],
+      "title": "Green Machine"
     }
   ],
   "success": true
 }
 ```
 
-#### DELETE /questions/{question_id}
+#### PATCH /drinks/{drink_id}
 
 - General:
-  - Deletes a question with the provided ID. Returns the success value, a list of
-    all questions remaining after the delete, and a count of the questions.
-- Sample: `curl -X DELETE http://127.0.0.1:5000/questions/2`
+
+  - Updates the drink with the provided ID. Returns the success value and the JSON for the updated drink.
+  - Requires manager permissions role
+
+- Sample: `curl -X PATCH \ http://localhost:5000/drinks/1 \ -H 'Accept: */*' \ -H 'Accept-Encoding: gzip, deflate' \ -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IlJFSTJNVFF3UXpoR1JEQTRRMFJETVVGRE5VTkJRVVUwUmtVNU9FUXhNMEUzTmtOQ016RkRSQSJ9.eyJpc3MiOiJodHRwczovL2ZzbmQtYmlsbHkuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVkODYyYzMwNGVmMDMyMGRmNGU0YWU5NiIsImF1ZCI6ImRyaW5rcyIsImlhdCI6MTU2OTI3NjY2OSwiZXhwIjoxNTY5MzYzMDY5LCJhenAiOiJybFVOaURqalMwQlA2bzBYSHJiNGYyU0ZobEUwRnJEMCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MtZGV0YWlsIiwicGF0Y2g6ZHJpbmtzIiwicG9zdDpkcmlua3MiXX0.cqm-TZaSALiLlm9zeSOHCiasJltDet4-76yDUOIrkM4bH0VZG2-whg5b0fxV-dxyOjKwHtd2fBt-V-hFgzonO6CfpL2G0CsWmfrSTmex5sMJL24YA5ZotX1HsLENntsjza2OCMvBxMiE0HFD8qdekMndweWYxeE5YON-L_0SIYg0RVpZ1WInaEuArh40n-bD84E3fDleczuxslGUSc873rQ6k_2kfI-IxUj-57iezSDmoGEXgUdexi_1sO2eyZ6F3En4Jj0Aka5p5rfps09Bro9uGYIitCFsTh_k7nuHi-KQE80ReZjIONtUNT-G-68tQ2yMyNqtM5Dmorvtb1f5Yw' \ -H 'Cache-Control: no-cache' \ -H 'Connection: keep-alive' \ -H 'Content-Length: 101' \ -H 'Content-Type: application/json' \ -H 'Host: localhost:5000' \ -H 'Postman-Token: 138ab962-cac0-4745-a14a-76f4af900798,3055a0b8-65df-41e1-8377-b77d7d667367' \ -H 'User-Agent: PostmanRuntime/7.17.1' \ -H 'cache-control: no-cache' \ -d '{ "title":"Super Green", "recipe": [{ "color":"green", "name":"Green Beast", "parts": 1 }] }'`
 
 ```
 {
-  "count": 20,
-  "questions": [
+  "drinks": [
     {
-      "answer": "Maya Angelou",
-      "category": 4,
-      "difficulty": 2,
-      "id": 5,
-      "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
-    },
-    {
-      "answer": "Muhammad Ali",
-      "category": 4,
-      "difficulty": 1,
-      "id": 9,
-      "question": "What boxer's original name is Cassius Clay?"
-    },
-    {
-      "answer": "Apollo 13",
-      "category": 5,
-      "difficulty": 4,
-      "id": 2,
-      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
-    },
-    {
-      "answer": "Tom Cruise",
-      "category": 5,
-      "difficulty": 4,
-      "id": 4,
-      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
-    },
-    {
-      "answer": "Edward Scissorhands",
-      "category": 5,
-      "difficulty": 3,
-      "id": 6,
-      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-    },
-    {
-      "answer": "Brazil",
-      "category": 6,
-      "difficulty": 3,
-      "id": 10,
-      "question": "Which is the only team to play in every soccer World Cup tournament?"
-    },
-    {
-      "answer": "Uruguay",
-      "category": 6,
-      "difficulty": 4,
-      "id": 11,
-      "question": "Which country won the first ever soccer World Cup in 1930?"
-    },
-    {
-      "answer": "George Washington Carver",
-      "category": 4,
-      "difficulty": 2,
-      "id": 12,
-      "question": "Who invented Peanut Butter?"
-    },
-    {
-      "answer": "Lake Victoria",
-      "category": 3,
-      "difficulty": 2,
-      "id": 13,
-      "question": "What is the largest lake in Africa?"
-    },
-    {
-      "answer": "The Palace of Versailles",
-      "category": 3,
-      "difficulty": 3,
-      "id": 14,
-      "question": "In which royal palace would you find the Hall of Mirrors?"
-    },
-    {
-      "answer": "Agra",
-      "category": 3,
-      "difficulty": 2,
-      "id": 15,
-      "question": "The Taj Mahal is located in which Indian city?"
-    },
-    {
-      "answer": "Escher",
-      "category": 2,
-      "difficulty": 1,
-      "id": 16,
-      "question": "Which Dutch graphic artist–initials M C was a creator of optical illusions?"
-    },
-    {
-      "answer": "Mona Lisa",
-      "category": 2,
-      "difficulty": 3,
-      "id": 17,
-      "question": "La Giaconda is better known as what?"
-    },
-    {
-      "answer": "One",
-      "category": 2,
-      "difficulty": 4,
-      "id": 18,
-      "question": "How many paintings did Van Gogh sell in his lifetime?"
-    },
-    {
-      "answer": "Jackson Pollock",
-      "category": 2,
-      "difficulty": 2,
-      "id": 19,
-      "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
-    },
-    {
-      "answer": "The Liver",
-      "category": 1,
-      "difficulty": 4,
-      "id": 20,
-      "question": "What is the heaviest organ in the human body?"
-    },
-    {
-      "answer": "Alexander Fleming",
-      "category": 1,
-      "difficulty": 3,
-      "id": 21,
-      "question": "Who discovered penicillin?"
-    },
-    {
-      "answer": "Blood",
-      "category": 1,
-      "difficulty": 4,
-      "id": 22,
-      "question": "Hematology is a branch of medicine involving the study of what?"
-    },
-    {
-      "answer": "Scarab",
-      "category": 4,
-      "difficulty": 4,
-      "id": 23,
-      "question": "Which dung beetle was worshipped by the ancient Egyptians?"
-    },
-    {
-      "answer": "sdfgsd",
-      "category": 1,
-      "difficulty": 1,
-      "id": 33,
-      "question": "sdfgs"
+      "id": 1,
+      "recipe": [
+        {
+          "color": "green",
+          "name": "Green Beast",
+          "parts": 1
+        }
+      ],
+      "title": "Super Green"
     }
   ],
-  "success": true
-}
-```
-
-#### POST /questions
-
-- General:
-
-  - Creates a new question using the question, answer, difficulty and category provided if a 'question' JSON
-    object is provided otherwise returns questions using a provided search term or returns
-    questions using the provided category. Returns success value, count of questions, questions, and if a new question
-    is created the new question ID is returned.
-
-- Sample: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"question": { "question":"Questions are hard?", "answer": "They can be!", "category": 2, "difficulty": 1} }'`
-
-- Sample: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"category": 1}'`
-
-- Sample: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"search":"title"}'`
-
-```
-{
-  "books": [
-    {
-      "author": "Neil Gaiman",
-      "id": 24,
-      "rating": 5,
-      "title": "Neverwhere"
-    }
-  ],
-  "created": 24,
-  "success": true,
-  "count": 17
-}
-```
-
-#### POST /quizzes
-
-- General:
-
-  - Returns a quiz question randomly selected that is not a previously asked question, a success value, the current category, and any previous questions.
-
-- Sample: `curl http://127.0.0.1:5000/quizzes -X POST -H "Content-Type: application/json" -d '{"quiz": {"previous_questions": [17, 5], "category_id": 2}}'`
-
-```
-{
-  "current_category": "",
-  "previous_questions": [],
-  "question": {
-    "answer": "Maya Angelou",
-    "category": 4,
-    "difficulty": 2,
-    "id": 5,
-    "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
-  },
   "success": true
 }
 ```
