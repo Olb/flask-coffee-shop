@@ -15,7 +15,6 @@ def create_app(test_config=None):
     CORS(app)
 
     '''
-    @TODO uncomment the following line to initialize the datbase
     !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
     !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
     '''
@@ -64,8 +63,6 @@ def create_app(test_config=None):
         new_drink = Drink(title=body['title'],
                           recipe=json.dumps(body['recipe']))
 
-        # TODO change exception type to correct type
-
         try:
             new_drink.insert()
         except KeyError:
@@ -99,7 +96,7 @@ def create_app(test_config=None):
 
         try:
             drink.update()
-        except:
+        except SystemError:
             abort(500)
 
         selection = Drink.query.filter_by(id=drink.id)
@@ -119,7 +116,7 @@ def create_app(test_config=None):
 
         try:
             drink.delete()
-        except:
+        except SystemError:
             abort(400)
 
         return jsonify({
