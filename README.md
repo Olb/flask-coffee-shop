@@ -72,8 +72,6 @@ This project uses NPM to manage software dependencies. NPM Relies on the package
 npm install
 ```
 
-## Required Tasks
-
 #### Configure Enviornment Variables
 
 Ionic uses a configuration file to manage environment variables. These variables ship with the transpiled software and should not include secrets.
