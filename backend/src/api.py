@@ -65,8 +65,8 @@ def create_app(test_config=None):
 
         try:
             new_drink.insert()
-        except KeyError:
-            abort(422)
+        except SystemError:
+            abort(500)
 
         selection = Drink.query.all()
 
@@ -117,7 +117,7 @@ def create_app(test_config=None):
         try:
             drink.delete()
         except SystemError:
-            abort(400)
+            abort(500)
 
         return jsonify({
             'success': True,
@@ -127,7 +127,7 @@ def create_app(test_config=None):
     # Error Handling
 
     @app.errorhandler(400)
-    def bad_request(error):
+    def bad_request_error(error):
         return jsonify({
             "success": False,
             "error": 400,
@@ -135,7 +135,7 @@ def create_app(test_config=None):
         }), 400
 
     @app.errorhandler(401)
-    def auth_error(error):
+    def not_authorized_error(error):
         return jsonify({
             "success": False,
             "error": 401,
@@ -143,7 +143,7 @@ def create_app(test_config=None):
         }), 401
 
     @app.errorhandler(403)
-    def auth_error(error):
+    def not_allowed_error(error):
         return jsonify({
             "success": False,
             "error": 403,
@@ -151,7 +151,7 @@ def create_app(test_config=None):
         }), 403
 
     @app.errorhandler(404)
-    def no_results(error):
+    def no_results_found(error):
         return jsonify({
             "success": False,
             "error": 404,
@@ -159,7 +159,7 @@ def create_app(test_config=None):
         }), 404
 
     @app.errorhandler(422)
-    def unprocessable(error):
+    def parameters_not_correct(error):
         return jsonify({
             "success": False,
             "error": 422,
@@ -167,7 +167,7 @@ def create_app(test_config=None):
         }), 422
 
     @app.errorhandler(500)
-    def unprocessable(error):
+    def internal_server_error(error):
         return jsonify({
             "success": False,
             "error": 500,
